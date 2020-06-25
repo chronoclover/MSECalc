@@ -12,17 +12,46 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using OpenCvSharp;
 
-namespace MSECalc
-{
+namespace MSECalc {
     /// <summary>
     /// MainWindow.xaml の相互作用ロジック
     /// </summary>
-    public partial class MainWindow : Window
-    {
-        public MainWindow()
-        {
+    public partial class MainWindow : System.Windows.Window {
+        public MainWindow() {
             InitializeComponent();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e) {
+            var OriginalVideoPath = this.OriginalVideoPath.Text;
+            var CompressedVideoPath = this.CompressedVideoPath.Text;
+
+            Task task = Task.Run(() => {
+                MseCalc(OriginalVideoPath, CompressedVideoPath);
+            });
+        }
+
+        private void MseCalc(String originalVideoPath, String compressedVideoPath) {
+            var OriginalVideo = new VideoCapture(originalVideoPath);
+            var CompressedVideo = new VideoCapture(compressedVideoPath);
+
+            if (!OriginalVideo.IsOpened()) {
+                MessageBox.Show("元映像のファイルが開けませんでした。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            if(!CompressedVideo.IsOpened()) {
+                MessageBox.Show("圧縮映像のファイルが開けませんでした。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            /*
+            Mat OriginalColorImage;
+            Mat OriginalGrayImage;
+            Mat CompressedColorImage;
+            Mat CompressedGrayImage;
+            */
+            
         }
     }
 }
