@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace MSECalc.Properties
+namespace PSNRCalc.Properties
 {
 
 

@@ -14,7 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using OpenCvSharp;
 
-namespace MSECalc {
+namespace PSNRCalc {
     /// <summary>
     /// MainWindow.xaml の相互作用ロジック
     /// </summary>
@@ -28,11 +28,11 @@ namespace MSECalc {
             var CompressedVideoPath = this.CompressedVideoPath.Text;
 
             Task task = Task.Run(() => {
-                MseCalc(OriginalVideoPath, CompressedVideoPath);
+                PSNRCalc(OriginalVideoPath, CompressedVideoPath);
             });
         }
 
-        private void MseCalc(String originalVideoPath, String compressedVideoPath) {
+        private void PSNRCalc(String originalVideoPath, String compressedVideoPath) {
             var OriginalVideo = new VideoCapture(originalVideoPath);
             var CompressedVideo = new VideoCapture(compressedVideoPath);
 

@@ -1,7 +1,7 @@
-﻿<Application x:Class="MSECalc.App"
+﻿<Application x:Class="PSNRCalc.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:MSECalc"
+             xmlns:local="clr-namespace:PSNRCalc"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
          
