@@ -1,6 +1,6 @@
-﻿### PSNR Calculator
+﻿## PSNR Calculator
 
 ![GitHub](https://img.shields.io/github/license/chronoclover/PSNRCalc)
 
-#### ライセンス
+### ライセンス
  - [MIT License](./LICENSE.txt)

@@ -1,15 +1,44 @@
-﻿<Window x:Class="PSNRCalc.MainWindow"
+﻿<mah:MetroWindow x:Class="PSNRCalc.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:local="clr-namespace:PSNRCalc"
         mc:Ignorable="d"
-        Title="MSE Calculator" Height="450" Width="800">
+        Title="PSNR Calculator" Height="450" Width="800"
+        TitleCharacterCasing="Normal"
+        BorderThickness="4"
+        TitleAlignment="Center"
+        xmlns:chrome="http://schemes.grabacr.net/winfx/2014/chrome">
+
+    <chrome:WindowChrome.Instance>
+        <chrome:WindowChrome BorderThickness="2" />
+    </chrome:WindowChrome.Instance>
+
     <Grid>
-        <Button Content="スタート" HorizontalAlignment="Left" Margin="10,361,0,0" VerticalAlignment="Top" Width="773" Height="50" Click="Button_Click"/>
-        <TextBox x:Name="OrigPath" HorizontalAlignment="Left" Height="23" Margin="30,82,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
-        <TextBox x:Name="CompPath" HorizontalAlignment="Left" Height="23" Margin="30,137,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
+        <TabControl HorizontalAlignment="Left" Height="390" Margin="10,10,0,0" VerticalAlignment="Top" Width="764">
+            <TabItem Header="Calculator">
+                <StackPanel Background="#FFE5E5E5">
+                    <Label Content="元映像のパス" Margin="10,10,0,-15" FontSize="16"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBox x:Name="OrigPath" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="652"/>
+                        <Button Content="参照" Width="75" Margin="10,10,0,10" FontSize="10"/>
+                    </StackPanel>
+                    <Label Content="圧縮映像のパス" Margin="10,0,0,-15" FontSize="16"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBox x:Name="CompPath" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="652"/>
+                        <Button Content="参照" Width="75" Margin="10,10,0,10" FontSize="10"/>
+                    </StackPanel>
+                    <Button Content="スタート" FontSize="16" HorizontalAlignment="Center" Margin="10,10,0,0" VerticalAlignment="Top" Width="70" Click="Button_Click"/>
+                    <ListBox x:Name="LogOutput" Margin="10,20,10,0" Height="116"/>
+
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Graph">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+        </TabControl>
 
     </Grid>
-</Window>
+</mah:MetroWindow>
