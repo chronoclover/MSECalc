@@ -8,8 +8,8 @@
         Title="MSE Calculator" Height="450" Width="800">
     <Grid>
         <Button Content="スタート" HorizontalAlignment="Left" Margin="10,361,0,0" VerticalAlignment="Top" Width="773" Height="50" Click="Button_Click"/>
-        <TextBox x:Name="OriginalVideoPath" HorizontalAlignment="Left" Height="23" Margin="30,82,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
-        <TextBox x:Name="CompressedVideoPath" HorizontalAlignment="Left" Height="23" Margin="30,137,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="OrigPath" HorizontalAlignment="Left" Height="23" Margin="30,82,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="CompPath" HorizontalAlignment="Left" Height="23" Margin="30,137,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
 
     </Grid>
 </Window>

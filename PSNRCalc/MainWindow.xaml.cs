@@ -18,23 +18,27 @@ namespace PSNRCalc {
     /// <summary>
     /// MainWindow.xaml の相互作用ロジック
     /// </summary>
+    
+    static class Constants {
+        public const int CAP_PROP_BITRATE = 47;
+    }
     public partial class MainWindow : System.Windows.Window {
         public MainWindow() {
             InitializeComponent();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e) {
-            var OriginalVideoPath = this.OriginalVideoPath.Text;
-            var CompressedVideoPath = this.CompressedVideoPath.Text;
+            if(string.IsNullOrWhiteSpace(this.OrigPath.Text) || string.IsNullOrWhiteSpace(this.CompPath.Text)) {
+                MessageBox.Show("ファイルのパス指定が正しくありません。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
-            Task task = Task.Run(() => {
-                PSNRCalc(OriginalVideoPath, CompressedVideoPath);
-            });
+            CalcPrep();
         }
 
-        private void PSNRCalc(String originalVideoPath, String compressedVideoPath) {
-            var OriginalVideo = new VideoCapture(originalVideoPath);
-            var CompressedVideo = new VideoCapture(compressedVideoPath);
+        private void CalcPrep() {
+            var OriginalVideo = new VideoCapture(this.OrigPath.Text);
+            var CompressedVideo = new VideoCapture(this.CompPath.Text);
 
             if (!OriginalVideo.IsOpened()) {
                 MessageBox.Show("元映像のファイルが開けませんでした。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -45,13 +49,16 @@ namespace PSNRCalc {
                 return;
             }
 
+            var Bitrate = CompressedVideo.Get(Constants.CAP_PROP_BITRATE);
+            MessageBox.Show(Convert.ToInt32(Bitrate / 1000).ToString() + "Mbps", "ビットレート", MessageBoxButton.OK, MessageBoxImage.Information);
+
             /*
             Mat OriginalColorImage;
             Mat OriginalGrayImage;
             Mat CompressedColorImage;
             Mat CompressedGrayImage;
             */
-            
+
         }
     }
 }
