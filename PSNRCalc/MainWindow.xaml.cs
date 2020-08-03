@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,9 +13,12 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 using OpenCvSharp;
 using MahApps.Metro.Controls;
+using Microsoft.Win32;
+using System.Collections.Specialized;
+using System.Collections.ObjectModel;
+using System.Reflection;
 
 namespace PSNRCalc {
     /// <summary>
@@ -32,35 +36,71 @@ namespace PSNRCalc {
     }
 
     public partial class MainWindow : MetroWindow {
+        public ObservableCollection<string> Logs = new ObservableCollection<string>();
+        public string jsonPath = "./data.json";
+
         public MainWindow() {
             InitializeComponent();
+            var assembly = Assembly.GetExecutingAssembly();
+            (LogOutput.Items as INotifyCollectionChanged).CollectionChanged += this.LogOutput_CollectionChanged;
+            LogOutput.ItemsSource = Logs;
+            Logs.Add(assembly.GetName().Name + " v" + assembly.GetName().Version.ToString());
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e) {
+        private void Start_Click(object sender, RoutedEventArgs e) {
             if(string.IsNullOrWhiteSpace(this.OrigPath.Text) || string.IsNullOrWhiteSpace(this.CompPath.Text)) {
                 MessageBox.Show("ファイルのパス指定が正しくありません。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-
             CalcPrep();
         }
 
-        private void CalcPrep() {
-            var OriginalVideo = new VideoCapture(this.OrigPath.Text);
-            var CompressedVideo = new VideoCapture(this.CompPath.Text);
+        private void OpenOrigFile(object sender, RoutedEventArgs e) {
+            OpenVideo(false);
+        }
 
-            if (!OriginalVideo.IsOpened()) {
+        private void OpenCompFile(object sender, RoutedEventArgs e) {
+            OpenVideo(true);
+        }
+
+        private void OpenVideo(bool isComp) {
+            var dlg = new OpenFileDialog() {
+                Filter = "MPEG-4 Video|*.mp4|Matroska Video|*.mkv|MPEG-TS|*.ts;*.m2ts|Audio Video Interleave|*.avi|All Files|*.*",
+                DefaultExt = ".mp4"
+            };
+            Nullable<bool> result = dlg.ShowDialog();
+            if(result == true) {
+                if (isComp) {
+                    CompPath.Text = dlg.FileName;
+                } else {
+                    OrigPath.Text = dlg.FileName;
+                }
+            }
+        }
+
+        private void CalcPrep() {
+            var originalVideo = new VideoCapture(this.OrigPath.Text);
+            var compressedVideo = new VideoCapture(this.CompPath.Text);
+
+            Logs.Clear();
+
+            if (File.Exists("./data.json")) {
+                var jsonString = File.ReadAllText(jsonPath);
+                Logs.Add("既存の計算データを読み込み：" + Path.GetFullPath(jsonPath));
+            }
+
+            if (!originalVideo.IsOpened()) {
                 MessageBox.Show("元映像のファイルが開けませんでした。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            if(!CompressedVideo.IsOpened()) {
+            if(!compressedVideo.IsOpened()) {
                 MessageBox.Show("圧縮映像のファイルが開けませんでした。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            var Bitrate = CompressedVideo.Get(Constants.CAP_PROP_BITRATE);
-            MessageBox.Show(Convert.ToInt32(Bitrate / 1000).ToString() + "Mbps", "ビットレート", MessageBoxButton.OK, MessageBoxImage.Information);
-
+            double bitrate = compressedVideo.Get(Constants.CAP_PROP_BITRATE);
+            MessageBox.Show(Convert.ToInt32(bitrate / 1000).ToString() + "Mbps", "ビットレート", MessageBoxButton.OK, MessageBoxImage.Information);
+            
             /*
             string json = "[{\"Bitrate\":4,\"Psnr\":35}]";
 
@@ -74,11 +114,21 @@ namespace PSNRCalc {
 
             /*
             Mat OriginalColorImage;
-            Mat OriginalGrayImage;
             Mat CompressedColorImage;
-            Mat CompressedGrayImage;
             */
 
+        }
+        /*
+        private void LogOutput_TargetUpdated(object sender, DataTransferEventArgs e) {
+            (LogOutput.ItemsSource as INotifyCollectionChanged).CollectionChanged += new NotifyCollectionChangedEventHandler(LogOutput_CollectionChanged);
+        }
+        */
+        private void LogOutput_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e) {
+            switch (e.Action) {
+                case NotifyCollectionChangedAction.Add:
+                    this.LogOutput.ScrollIntoView(this.LogOutput.Items[e.NewStartingIndex]);
+                    break;
+            }
         }
     }
 }

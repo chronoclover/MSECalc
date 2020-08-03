@@ -10,11 +10,7 @@
         TitleCharacterCasing="Normal"
         BorderThickness="4"
         TitleAlignment="Center"
-        xmlns:chrome="http://schemes.grabacr.net/winfx/2014/chrome">
-
-    <chrome:WindowChrome.Instance>
-        <chrome:WindowChrome BorderThickness="2" />
-    </chrome:WindowChrome.Instance>
+        GlowBrush="{DynamicResource MahApps.Brushes.Accent}">
 
     <Grid>
         <TabControl HorizontalAlignment="Left" Height="390" Margin="10,10,0,0" VerticalAlignment="Top" Width="764">
@@ -23,15 +19,15 @@
                     <Label Content="元映像のパス" Margin="10,10,0,-15" FontSize="16"/>
                     <StackPanel Orientation="Horizontal">
                         <TextBox x:Name="OrigPath" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="652"/>
-                        <Button Content="参照" Width="75" Margin="10,10,0,10" FontSize="10"/>
+                        <Button Content="参照" Width="75" Margin="10,10,0,10" FontSize="10" Click="OpenOrigFile"/>
                     </StackPanel>
                     <Label Content="圧縮映像のパス" Margin="10,0,0,-15" FontSize="16"/>
                     <StackPanel Orientation="Horizontal">
                         <TextBox x:Name="CompPath" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="652"/>
-                        <Button Content="参照" Width="75" Margin="10,10,0,10" FontSize="10"/>
+                        <Button Content="参照" Width="75" Margin="10,10,0,10" FontSize="10" Click="OpenCompFile"/>
                     </StackPanel>
-                    <Button Content="スタート" FontSize="16" HorizontalAlignment="Center" Margin="10,10,0,0" VerticalAlignment="Top" Width="70" Click="Button_Click"/>
-                    <ListBox x:Name="LogOutput" Margin="10,20,10,0" Height="116"/>
+                    <Button Content="スタート" FontSize="16" HorizontalAlignment="Center" Margin="10,10,0,0" VerticalAlignment="Top" Width="70" Click="Start_Click"/>
+                    <ListBox x:Name="LogOutput" ItemsSource="{Binding}" Margin="10,20,10,0" Height="116"/>
 
                 </StackPanel>
             </TabItem>
