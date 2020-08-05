@@ -27,6 +27,7 @@ namespace PSNRCalc {
     
     static class Constants {
         public const int CAP_PROP_BITRATE = 47;
+        public const int CAP_PROP_FRAME_COUNT = 7;
     }
 
     public class MeasureData {
@@ -82,6 +83,8 @@ namespace PSNRCalc {
             var originalVideo = new VideoCapture(this.OrigPath.Text);
             var compressedVideo = new VideoCapture(this.CompPath.Text);
 
+            int[] calculated = new int[100];
+
             Logs.Clear();
 
             if (File.Exists("./data.json")) {
@@ -100,6 +103,12 @@ namespace PSNRCalc {
 
             double bitrate = compressedVideo.Get(Constants.CAP_PROP_BITRATE);
             MessageBox.Show(Convert.ToInt32(bitrate / 1000).ToString() + "Mbps", "ビットレート", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            var originalFrameCount = originalVideo.Get(Constants.CAP_PROP_FRAME_COUNT);
+            var compressedFrameCount = compressedVideo.Get(Constants.CAP_PROP_FRAME_COUNT);
+
+            Logs.Add("元映像の総フレーム数：" + originalFrameCount.ToString());
+            Logs.Add("圧縮映像の総フレーム数：" + compressedFrameCount.ToString());
             
             /*
             string json = "[{\"Bitrate\":4,\"Psnr\":35}]";
