@@ -4,7 +4,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
-        xmlns:wfm="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         x:Class="PSNRCalc.MainWindow"
         TextOptions.TextFormattingMode="Ideal" 
@@ -28,12 +27,12 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Label Content="元映像　" FontSize="12"></Label>
                                     <TextBox x:Name="OrigPath" FontSize="12" HorizontalAlignment="Left" Margin="5,0,5,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="580"/>
-                                    <Button Content="参照" Width="75" Margin="0,0,0,0" FontSize="12" Click="OpenOrigFile"/>
+                                    <Button x:Name="ButtonOpenOrig" Content="参照" Width="75" Margin="0,0,0,0" FontSize="12" Click="OpenVideo"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
                                     <Label Content="圧縮映像" FontSize="12"></Label>
                                     <TextBox x:Name="CompPath" FontSize="12" HorizontalAlignment="Left" Margin="5,0,5,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="580"/>
-                                    <Button Content="参照" Width="75" FontSize="12" Click="OpenCompFile"/>
+                                    <Button x:Name="ButtonOpenComp" Content="参照" Width="75" FontSize="12" Click="OpenVideo"/>
                                 </StackPanel>
                             </StackPanel>
                         </GroupBox>
@@ -42,22 +41,22 @@
                         <GroupBox Header="フレーム設定" FontSize="16" Margin="5">
                             <StackPanel Orientation="Horizontal">
                                 <Label Content="開始フレーム：元映像" Margin="5,0,0,0" FontSize="12"/>
-                                <xctk:IntegerUpDown x:Name="OrigStartFrame" Value="0" Maximum="9999" Minimum="0" Width="60" FontSize="12"/>
+                                <xctk:IntegerUpDown x:Name="OrigStartFrame" Value="1" Maximum="9999" Minimum="1" Width="60" FontSize="12"/>
                                 <Label Content="圧縮映像" Margin="10,0,0,0" FontSize="12"/>
-                                <xctk:IntegerUpDown x:Name="CompStartFrame" Value="0" Maximum="9999" Minimum="0" Width="60" FontSize="12"/>
+                                <xctk:IntegerUpDown x:Name="CompStartFrame" Value="1" Maximum="9999" Minimum="1" Width="60" FontSize="12"/>
                                 <Label Content="計算フレーム数" Margin="50,0,0,0" FontSize="12"/>
-                                <xctk:IntegerUpDown x:Name="CalcFrame" Value="0" Maximum="9999" Minimum="0" Width="60" FontSize="12"/>
+                                <xctk:IntegerUpDown x:Name="CalcFrame" Value="100" Maximum="9999" Minimum="1" Width="60" FontSize="12"/>
                             </StackPanel>
                         </GroupBox>
                     </materialDesign:Card>
-                    <Button Content="スタート" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,5,0,5" Width="100" Click="Start_Click" RenderTransformOrigin="0.317,0.526"/>
+                    <Button x:Name="ButtonStart" Content="スタート" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,5,0,5" Width="100" Click="Start_Click" RenderTransformOrigin="0.317,0.526"/>
                     <materialDesign:Card Margin="5,0,5,0" Height="140">
                         <ListBox x:Name="LogOutput" Margin="0,0,0,0"/>
                     </materialDesign:Card>
                 </StackPanel>
             </TabItem>
             <TabItem Header="Graph">
-                <Grid Background="#FFE5E5E5"/>
+                <Grid />
             </TabItem>
         </TabControl>
     </Grid>

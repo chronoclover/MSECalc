@@ -28,17 +28,21 @@ namespace PSNRCalc {
     static class Constants {
         public const int CAP_PROP_BITRATE = 47;
         public const int CAP_PROP_FRAME_COUNT = 7;
+        public const int CAP_PROP_POS_FRAMES = 1;
     }
 
     public class MeasureData {
         public int Bitrate { get; set; }
-        public double Psnr { get; set; }
-        public override string ToString() => $"Bitrate:{Bitrate}, Psnr:{Psnr}";
+        public double PSNR { get; set; }
+        public override string ToString() => $"Bitrate:{Bitrate}, Psnr:{PSNR}";
     }
 
     public partial class MainWindow : MetroWindow {
         public ObservableCollection<string> Logs = new ObservableCollection<string>();
-        public string jsonPath = "./data.json";
+        public string jsonPath = "data.json";
+
+        public int originalStartFrame;
+        public int compressedStartFrame;
 
         public MainWindow() {
             InitializeComponent();
@@ -50,94 +54,128 @@ namespace PSNRCalc {
 
         private void Start_Click(object sender, RoutedEventArgs e) {
             if(string.IsNullOrWhiteSpace(this.OrigPath.Text) || string.IsNullOrWhiteSpace(this.CompPath.Text)) {
-                MessageBox.Show("ファイルのパス指定が正しくありません。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                PrintLog("ファイルのパス指定が正しくありません。");
                 return;
             }
-            CalcPrep();
+            CalcBase();
         }
 
-        private void OpenOrigFile(object sender, RoutedEventArgs e) {
-            OpenVideo(false);
-        }
-
-        private void OpenCompFile(object sender, RoutedEventArgs e) {
-            OpenVideo(true);
-        }
-
-        private void OpenVideo(bool isComp) {
+        private void OpenVideo(object sender, RoutedEventArgs e) {
             var dlg = new OpenFileDialog() {
                 Filter = "MPEG-4 Video|*.mp4|Matroska Video|*.mkv|MPEG-TS|*.ts;*.m2ts|Audio Video Interleave|*.avi|All Files|*.*",
                 DefaultExt = ".mp4"
             };
             Nullable<bool> result = dlg.ShowDialog();
             if(result == true) {
-                if (isComp) {
-                    CompPath.Text = dlg.FileName;
-                } else {
+                if (((Button)sender).Name == ButtonOpenOrig.Name) {
                     OrigPath.Text = dlg.FileName;
+                } else {
+                    CompPath.Text = dlg.FileName;
                 }
             }
         }
 
-        private void CalcPrep() {
+        private void PrintLog(string log) {
+            Logs.Add("[" + DateTime.Now + "] " + log);
+        }
+
+        private void CalcBase() {
             var originalVideo = new VideoCapture(this.OrigPath.Text);
             var compressedVideo = new VideoCapture(this.CompPath.Text);
+            var targetFrames = Convert.ToInt32(CalcFrame.Text);
 
-            int[] calculated = new int[100];
+            var currentOriginalFrame = new Mat();
+            var currentCompressedFrame = new Mat();
 
-            Logs.Clear();
+            string jsonString;
 
-            if (File.Exists("./data.json")) {
-                var jsonString = File.ReadAllText(jsonPath);
-                Logs.Add("既存の計算データを読み込み：" + Path.GetFullPath(jsonPath));
-            }
+            double currentPSNR;
+            double PSNR = 0;
+
+            List<MeasureData> psnrDatas = new List<MeasureData>();
+
+            originalStartFrame = Convert.ToInt32(OrigStartFrame.Text);
+            compressedStartFrame = Convert.ToInt32(CompStartFrame.Text);
+
+            UIToggle(false);
 
             if (!originalVideo.IsOpened()) {
-                MessageBox.Show("元映像のファイルが開けませんでした。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                PrintLog("元映像のファイルが開けませんでした。");
+                UIToggle(true);
                 return;
             }
             if(!compressedVideo.IsOpened()) {
-                MessageBox.Show("圧縮映像のファイルが開けませんでした。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                PrintLog("圧縮映像のファイルが開けませんでした。");
+                UIToggle(true);
                 return;
             }
 
-            double bitrate = compressedVideo.Get(Constants.CAP_PROP_BITRATE);
-            MessageBox.Show(Convert.ToInt32(bitrate / 1000).ToString() + "Mbps", "ビットレート", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (File.Exists(jsonPath)) {
+                jsonString = File.ReadAllText(jsonPath);
+                try {
+                    PrintLog(jsonPath + "が存在します。読み込みを行います...");
+                    psnrDatas = JsonSerializer.Deserialize<List<MeasureData>>(jsonString);
+                } catch (JsonException e) {
+                    PrintLog("<JsonException> 既存のJsonデータが壊れています。ファイルを消去して今回の計算結果を上書きします。");
+                }
+            }
+
+            int bitrate = Convert.ToInt32(compressedVideo.Get(Constants.CAP_PROP_BITRATE)) / 1000;
+            PrintLog("ビットレート：" + bitrate.ToString() + "Mbps");
 
             var originalFrameCount = originalVideo.Get(Constants.CAP_PROP_FRAME_COUNT);
             var compressedFrameCount = compressedVideo.Get(Constants.CAP_PROP_FRAME_COUNT);
 
-            Logs.Add("元映像の総フレーム数：" + originalFrameCount.ToString());
-            Logs.Add("圧縮映像の総フレーム数：" + compressedFrameCount.ToString());
-            
-            /*
-            string json = "[{\"Bitrate\":4,\"Psnr\":35}]";
+            PrintLog("総フレーム数　元映像：" + originalFrameCount.ToString() + "　圧縮映像：" + compressedFrameCount.ToString());
+            PrintLog("計算開始フレーム　元映像：" + originalStartFrame.ToString() + "　圧縮映像：" + compressedStartFrame.ToString());
+            PrintLog("計算対象：" + targetFrames.ToString() + "フレーム");
 
-            List<MeasureData> Datas = JsonSerializer.Deserialize<List<MeasureData>>(json);
+            originalVideo.Set(Constants.CAP_PROP_POS_FRAMES, originalStartFrame);
+            compressedVideo.Set(Constants.CAP_PROP_POS_FRAMES, compressedStartFrame);
 
-            Datas.Add(new MeasureData() { Bitrate = 2, Psnr = 20 });
-            Datas.Sort((a, b) => a.Bitrate - b.Bitrate);
+            for(int i = 1; i <= targetFrames; i++) {
+                originalVideo.Read(currentOriginalFrame);
+                compressedVideo.Read(currentCompressedFrame);
+                currentPSNR = Cv2.PSNR(currentOriginalFrame, currentCompressedFrame);
+                PrintLog("Current Frame = " + i + ", PSNR = " + currentPSNR);
+                PSNR += currentPSNR;
+            }
 
-            Console.WriteLine(JsonSerializer.Serialize(Datas, new JsonSerializerOptions { WriteIndented = true }));
-            */
+            PSNR /= targetFrames;
+            PrintLog("計算終了 PSNR = " + PSNR);
 
-            /*
-            Mat OriginalColorImage;
-            Mat CompressedColorImage;
-            */
+            psnrDatas.Add(new MeasureData() { Bitrate = bitrate, PSNR = PSNR });
+            psnrDatas.Sort((a, b) => a.Bitrate - b.Bitrate);
 
+            File.WriteAllText(jsonPath, JsonSerializer.Serialize(psnrDatas, new JsonSerializerOptions { WriteIndented = true }));
+            PrintLog(jsonPath + "に保存しました");
+
+            originalVideo.Release();
+            compressedVideo.Release();
+
+            UIToggle(true);
         }
-        /*
-        private void LogOutput_TargetUpdated(object sender, DataTransferEventArgs e) {
-            (LogOutput.ItemsSource as INotifyCollectionChanged).CollectionChanged += new NotifyCollectionChangedEventHandler(LogOutput_CollectionChanged);
-        }
-        */
+
         private void LogOutput_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e) {
             switch (e.Action) {
                 case NotifyCollectionChangedAction.Add:
                     this.LogOutput.ScrollIntoView(this.LogOutput.Items[e.NewStartingIndex]);
                     break;
             }
+        }
+
+        private void UIToggle(bool isEnabled) {
+            bool isReadOnly = !isEnabled;
+
+            OrigPath.IsReadOnly = isReadOnly;
+            CompPath.IsReadOnly = isReadOnly;
+            CalcFrame.IsReadOnly = isReadOnly;
+            OrigStartFrame.IsReadOnly = isReadOnly;
+            CompStartFrame.IsReadOnly = isReadOnly;
+
+            ButtonStart.IsEnabled = isEnabled;
+            ButtonOpenOrig.IsEnabled = isEnabled;
+            ButtonOpenComp.IsEnabled = isEnabled;
         }
     }
 }
