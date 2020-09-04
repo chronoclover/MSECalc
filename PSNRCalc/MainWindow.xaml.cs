@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Management;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -39,6 +40,9 @@ namespace PSNRCalc {
 
     public partial class MainWindow : MetroWindow {
         public ObservableCollection<string> Logs = new ObservableCollection<string>();
+
+        public VideoCaptureAPIs api;
+
         public string jsonPath = "data.json";
 
         public int originalStartFrame;
@@ -50,6 +54,23 @@ namespace PSNRCalc {
             (LogOutput.Items as INotifyCollectionChanged).CollectionChanged += this.LogOutput_CollectionChanged;
             LogOutput.ItemsSource = Logs;
             Logs.Add(assembly.GetName().Name + " v" + assembly.GetName().Version.ToString());
+
+            var mc = new ManagementClass("Win32_VideoController");
+            var moc = mc.GetInstances();
+            bool hasIntel = false;
+
+            foreach(ManagementObject mo in moc) {
+                string gpu = mo["Name"].ToString();
+                if (gpu.Substring(0, 5) == "Intel") {
+                    hasIntel = true;
+                }
+            }
+
+            if (hasIntel) {
+                api = VideoCaptureAPIs.INTEL_MFX;
+            } else {
+                api = VideoCaptureAPIs.ANY;
+            }
         }
 
         private void Start_Click(object sender, RoutedEventArgs e) {
@@ -80,8 +101,8 @@ namespace PSNRCalc {
         }
 
         private void CalcBase() {
-            var originalVideo = new VideoCapture(this.OrigPath.Text);
-            var compressedVideo = new VideoCapture(this.CompPath.Text);
+            var originalVideo = new VideoCapture(this.OrigPath.Text, api);
+            var compressedVideo = new VideoCapture(this.CompPath.Text, api);
             var targetFrames = Convert.ToInt32(CalcFrame.Text);
 
             var currentOriginalFrame = new Mat();
@@ -120,7 +141,7 @@ namespace PSNRCalc {
                 }
             }
 
-            int bitrate = Convert.ToInt32(compressedVideo.Get(Constants.CAP_PROP_BITRATE)) / 1000;
+            int bitrate = Convert.ToInt32(compressedVideo.Get(Constants.CAP_PROP_BITRATE) / 1000);
             PrintLog("ビットレート：" + bitrate.ToString() + "Mbps");
 
             var originalFrameCount = originalVideo.Get(Constants.CAP_PROP_FRAME_COUNT);
