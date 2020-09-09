@@ -18,7 +18,7 @@
         ResizeMode="NoResize">
 
     <Grid>
-        <TabControl HorizontalAlignment="Left" Height="480" Margin="10,10,0,0" VerticalAlignment="Top" Width="764">
+        <TabControl HorizontalAlignment="Left" Height="480" Margin="10,10,0,0" VerticalAlignment="Top" Width="764" Background="{DynamicResource MaterialDesignPaper}">
             <TabItem Header="Calculator">
                 <StackPanel Margin="0,0,0,0">
                     <materialDesign:Card Margin="5,0,5,0">
@@ -26,12 +26,12 @@
                             <StackPanel Orientation="Vertical">
                                 <StackPanel Orientation="Horizontal">
                                     <Label Content="元映像　" FontSize="12"></Label>
-                                    <TextBox x:Name="OrigPath" FontSize="12" HorizontalAlignment="Left" Margin="5,0,5,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="580"/>
+                                    <TextBox x:Name="OrigPath" FontSize="12" HorizontalAlignment="Left" Margin="5,0,5,0" TextWrapping="NoWrap" VerticalAlignment="Top" Width="580"/>
                                     <Button x:Name="ButtonOpenOrig" Content="参照" Width="75" Margin="0,0,0,0" FontSize="12" Click="OpenVideo"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
                                     <Label Content="圧縮映像" FontSize="12"></Label>
-                                    <TextBox x:Name="CompPath" FontSize="12" HorizontalAlignment="Left" Margin="5,0,5,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="580"/>
+                                    <TextBox x:Name="CompPath" FontSize="12" HorizontalAlignment="Left" Margin="5,0,5,0" TextWrapping="NoWrap" VerticalAlignment="Top" Width="580"/>
                                     <Button x:Name="ButtonOpenComp" Content="参照" Width="75" FontSize="12" Click="OpenVideo"/>
                                 </StackPanel>
                             </StackPanel>
@@ -49,15 +49,17 @@
                             </StackPanel>
                         </GroupBox>
                     </materialDesign:Card>
-                    <Button x:Name="ButtonStart" Content="スタート" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,5,0,5" Width="100" Click="Start_Click" RenderTransformOrigin="0.317,0.526"/>
+                    <Button x:Name="ButtonStart" Content="スタート"  FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,5,0,5" Width="100" Click="Start_Click" RenderTransformOrigin="0.317,0.526"/>
                     <materialDesign:Card Margin="5,0,5,0" Height="140">
                         <ListBox x:Name="LogOutput" Margin="0,0,0,0"/>
                     </materialDesign:Card>
                 </StackPanel>
             </TabItem>
+            <!--
             <TabItem Header="Graph">
                 <Grid />
             </TabItem>
+            -->
         </TabControl>
     </Grid>
 </mah:MetroWindow>

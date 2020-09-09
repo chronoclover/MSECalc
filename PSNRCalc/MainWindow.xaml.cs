@@ -1,25 +1,18 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
-using System.Linq;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.IO;
 using System.Management;
-using System.Text;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using OpenCvSharp;
 using MahApps.Metro.Controls;
+using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
-using System.Collections.Specialized;
-using System.Collections.ObjectModel;
-using System.Reflection;
 
 namespace PSNRCalc {
     /// <summary>
@@ -41,12 +34,9 @@ namespace PSNRCalc {
     public partial class MainWindow : MetroWindow {
         public ObservableCollection<string> Logs = new ObservableCollection<string>();
 
-        public VideoCaptureAPIs api;
+        //public VideoCaptureAPIs api;
 
         public string jsonPath = "data.json";
-
-        public int originalStartFrame;
-        public int compressedStartFrame;
 
         public MainWindow() {
             InitializeComponent();
@@ -55,6 +45,7 @@ namespace PSNRCalc {
             LogOutput.ItemsSource = Logs;
             Logs.Add(assembly.GetName().Name + " v" + assembly.GetName().Version.ToString());
 
+            /*
             var mc = new ManagementClass("Win32_VideoController");
             var moc = mc.GetInstances();
             bool hasIntel = false;
@@ -68,17 +59,19 @@ namespace PSNRCalc {
 
             if (hasIntel) {
                 api = VideoCaptureAPIs.INTEL_MFX;
+                PrintLog("Intel製GPUが見つかりました。QSVを使用します。");
             } else {
                 api = VideoCaptureAPIs.ANY;
             }
+            */
         }
 
-        private void Start_Click(object sender, RoutedEventArgs e) {
+        private async void Start_Click(object sender, RoutedEventArgs e) {
             if(string.IsNullOrWhiteSpace(this.OrigPath.Text) || string.IsNullOrWhiteSpace(this.CompPath.Text)) {
                 PrintLog("ファイルのパス指定が正しくありません。");
                 return;
             }
-            CalcBase();
+            await CalcBase();
         }
 
         private void OpenVideo(object sender, RoutedEventArgs e) {
@@ -86,7 +79,7 @@ namespace PSNRCalc {
                 Filter = "MPEG-4 Video|*.mp4|Matroska Video|*.mkv|MPEG-TS|*.ts;*.m2ts|Audio Video Interleave|*.avi|All Files|*.*",
                 DefaultExt = ".mp4"
             };
-            Nullable<bool> result = dlg.ShowDialog();
+            bool? result = dlg.ShowDialog();
             if(result == true) {
                 if (((Button)sender).Name == ButtonOpenOrig.Name) {
                     OrigPath.Text = dlg.FileName;
@@ -97,73 +90,82 @@ namespace PSNRCalc {
         }
 
         private void PrintLog(string log) {
-            Logs.Add("[" + DateTime.Now + "] " + log);
+            Dispatcher.Invoke(() => {
+                Logs.Add("[" + DateTime.Now + "] " + log);
+            });
         }
 
-        private void CalcBase() {
-            var originalVideo = new VideoCapture(this.OrigPath.Text, api);
-            var compressedVideo = new VideoCapture(this.CompPath.Text, api);
+        private async Task<int> CalcBase() {
+            var originalVideo = new VideoCapture(this.OrigPath.Text);
+            var compressedVideo = new VideoCapture(this.CompPath.Text);
+
             var targetFrames = Convert.ToInt32(CalcFrame.Text);
+            var originalStartFrame = Convert.ToInt32(OrigStartFrame.Text);
+            var compressedStartFrame = Convert.ToInt32(CompStartFrame.Text);
 
-            var currentOriginalFrame = new Mat();
-            var currentCompressedFrame = new Mat();
-
-            string jsonString;
-
-            double currentPSNR;
             double PSNR = 0;
 
+            string jsonString;
             List<MeasureData> psnrDatas = new List<MeasureData>();
-
-            originalStartFrame = Convert.ToInt32(OrigStartFrame.Text);
-            compressedStartFrame = Convert.ToInt32(CompStartFrame.Text);
 
             UIToggle(false);
 
             if (!originalVideo.IsOpened()) {
                 PrintLog("元映像のファイルが開けませんでした。");
                 UIToggle(true);
-                return;
+                return 1;
             }
-            if(!compressedVideo.IsOpened()) {
+            if (!compressedVideo.IsOpened()) {
                 PrintLog("圧縮映像のファイルが開けませんでした。");
                 UIToggle(true);
-                return;
+                return 1;
             }
 
-            if (File.Exists(jsonPath)) {
-                jsonString = File.ReadAllText(jsonPath);
-                try {
-                    PrintLog(jsonPath + "が存在します。読み込みを行います...");
-                    psnrDatas = JsonSerializer.Deserialize<List<MeasureData>>(jsonString);
-                } catch (JsonException e) {
-                    PrintLog("<JsonException> 既存のJsonデータが壊れています。ファイルを消去して今回の計算結果を上書きします。");
+            var bitrate = Convert.ToInt32(compressedVideo.Get(Constants.CAP_PROP_BITRATE) / 1000);
+
+            var t = await Task.Run(() => {
+
+                var currentOriginalFrame = new Mat();
+                var currentCompressedFrame = new Mat();
+
+                double currentPSNR;
+
+                if (File.Exists(jsonPath)) {
+                    jsonString = File.ReadAllText(jsonPath);
+                   try {
+                       PrintLog(jsonPath + "が存在します。読み込みを行います...");
+                       psnrDatas = JsonSerializer.Deserialize<List<MeasureData>>(jsonString);
+                    } catch (JsonException) {
+                        PrintLog("<JsonException> 既存のJsonデータが壊れています。ファイルを消去して今回の計算結果を上書きします。");
+                    }
                 }
-            }
 
-            int bitrate = Convert.ToInt32(compressedVideo.Get(Constants.CAP_PROP_BITRATE) / 1000);
-            PrintLog("ビットレート：" + bitrate.ToString() + "Mbps");
 
-            var originalFrameCount = originalVideo.Get(Constants.CAP_PROP_FRAME_COUNT);
-            var compressedFrameCount = compressedVideo.Get(Constants.CAP_PROP_FRAME_COUNT);
+                PrintLog("ビットレート：" + bitrate.ToString() + "Mbps");
 
-            PrintLog("総フレーム数　元映像：" + originalFrameCount.ToString() + "　圧縮映像：" + compressedFrameCount.ToString());
-            PrintLog("計算開始フレーム　元映像：" + originalStartFrame.ToString() + "　圧縮映像：" + compressedStartFrame.ToString());
-            PrintLog("計算対象：" + targetFrames.ToString() + "フレーム");
+                var originalFrameCount = originalVideo.Get(Constants.CAP_PROP_FRAME_COUNT);
+                var compressedFrameCount = compressedVideo.Get(Constants.CAP_PROP_FRAME_COUNT);
 
-            originalVideo.Set(Constants.CAP_PROP_POS_FRAMES, originalStartFrame);
-            compressedVideo.Set(Constants.CAP_PROP_POS_FRAMES, compressedStartFrame);
+                PrintLog("総フレーム数　元映像：" + originalFrameCount.ToString() + "　圧縮映像：" + compressedFrameCount.ToString());
+                PrintLog("計算開始フレーム　元映像：" + originalStartFrame.ToString() + "　圧縮映像：" + compressedStartFrame.ToString());
+                PrintLog("計算対象：" + targetFrames.ToString() + "フレーム");
 
-            for(int i = 1; i <= targetFrames; i++) {
-                originalVideo.Read(currentOriginalFrame);
-                compressedVideo.Read(currentCompressedFrame);
-                currentPSNR = Cv2.PSNR(currentOriginalFrame, currentCompressedFrame);
-                PrintLog("Current Frame = " + i + ", PSNR = " + currentPSNR);
-                PSNR += currentPSNR;
-            }
+                originalVideo.Set(Constants.CAP_PROP_POS_FRAMES, originalStartFrame);
+                compressedVideo.Set(Constants.CAP_PROP_POS_FRAMES, compressedStartFrame);
+
+            
+                for (int i = 1; i <= targetFrames; i++) {
+                    originalVideo.Read(currentOriginalFrame);
+                    compressedVideo.Read(currentCompressedFrame);
+                    currentPSNR = Cv2.PSNR(currentOriginalFrame, currentCompressedFrame);
+                    PrintLog("Current Frame = " + i + ", PSNR = " + currentPSNR);
+                    PSNR += currentPSNR;
+                }
+                return 0;
+            });
 
             PSNR /= targetFrames;
-            PrintLog("計算終了 PSNR = " + PSNR);
+            PrintLog("計算終了 平均PSNR = " + PSNR);
 
             psnrDatas.Add(new MeasureData() { Bitrate = bitrate, PSNR = PSNR });
             psnrDatas.Sort((a, b) => a.Bitrate - b.Bitrate);
@@ -175,6 +177,7 @@ namespace PSNRCalc {
             compressedVideo.Release();
 
             UIToggle(true);
+            return t;
         }
 
         private void LogOutput_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e) {
@@ -187,6 +190,9 @@ namespace PSNRCalc {
 
         private void UIToggle(bool isEnabled) {
             bool isReadOnly = !isEnabled;
+
+            ButtonProgressAssist.SetIsIndicatorVisible(ButtonStart, isReadOnly);
+            ButtonProgressAssist.SetIsIndeterminate(ButtonStart, isReadOnly);
 
             OrigPath.IsReadOnly = isReadOnly;
             CompPath.IsReadOnly = isReadOnly;
