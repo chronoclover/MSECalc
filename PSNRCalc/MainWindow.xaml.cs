@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
-using System.Management;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -13,6 +12,7 @@ using OpenCvSharp;
 using MahApps.Metro.Controls;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
+using System.Linq;
 
 namespace PSNRCalc {
     /// <summary>
@@ -20,21 +20,18 @@ namespace PSNRCalc {
     /// </summary>
     
     static class Constants {
-        public const int CAP_PROP_BITRATE = 47;
         public const int CAP_PROP_FRAME_COUNT = 7;
         public const int CAP_PROP_POS_FRAMES = 1;
     }
 
     public class MeasureData {
-        public int Bitrate { get; set; }
+        public string Timestamp { get; set; }
         public double PSNR { get; set; }
-        public override string ToString() => $"Bitrate:{Bitrate}, Psnr:{PSNR}";
+        public override string ToString() => $"Timestamp:{Timestamp}, PSNR:{PSNR}";
     }
 
     public partial class MainWindow : MetroWindow {
         public ObservableCollection<string> Logs = new ObservableCollection<string>();
-
-        //public VideoCaptureAPIs api;
 
         public string jsonPath = "data.json";
 
@@ -44,26 +41,6 @@ namespace PSNRCalc {
             (LogOutput.Items as INotifyCollectionChanged).CollectionChanged += this.LogOutput_CollectionChanged;
             LogOutput.ItemsSource = Logs;
             Logs.Add(assembly.GetName().Name + " v" + assembly.GetName().Version.ToString());
-
-            /*
-            var mc = new ManagementClass("Win32_VideoController");
-            var moc = mc.GetInstances();
-            bool hasIntel = false;
-
-            foreach(ManagementObject mo in moc) {
-                string gpu = mo["Name"].ToString();
-                if (gpu.Substring(0, 5) == "Intel") {
-                    hasIntel = true;
-                }
-            }
-
-            if (hasIntel) {
-                api = VideoCaptureAPIs.INTEL_MFX;
-                PrintLog("Intel製GPUが見つかりました。QSVを使用します。");
-            } else {
-                api = VideoCaptureAPIs.ANY;
-            }
-            */
         }
 
         private async void Start_Click(object sender, RoutedEventArgs e) {
@@ -76,8 +53,7 @@ namespace PSNRCalc {
 
         private void OpenVideo(object sender, RoutedEventArgs e) {
             var dlg = new OpenFileDialog() {
-                Filter = "MPEG-4 Video|*.mp4|Matroska Video|*.mkv|MPEG-TS|*.ts;*.m2ts|Audio Video Interleave|*.avi|All Files|*.*",
-                DefaultExt = ".mp4"
+                Filter = "XAVC / ProRes|*.mxf;*.mov|All Files|*.*"
             };
             bool? result = dlg.ShowDialog();
             if(result == true) {
@@ -121,8 +97,6 @@ namespace PSNRCalc {
                 return 1;
             }
 
-            var bitrate = Convert.ToInt32(compressedVideo.Get(Constants.CAP_PROP_BITRATE) / 1000);
-
             var t = await Task.Run(() => {
 
                 var currentOriginalFrame = new Mat();
@@ -139,9 +113,6 @@ namespace PSNRCalc {
                         PrintLog("<JsonException> 既存のJsonデータが壊れています。ファイルを消去して今回の計算結果を上書きします。");
                     }
                 }
-
-
-                PrintLog("ビットレート：" + bitrate.ToString() + "Mbps");
 
                 var originalFrameCount = originalVideo.Get(Constants.CAP_PROP_FRAME_COUNT);
                 var compressedFrameCount = compressedVideo.Get(Constants.CAP_PROP_FRAME_COUNT);
@@ -167,8 +138,10 @@ namespace PSNRCalc {
             PSNR /= targetFrames;
             PrintLog("計算終了 平均PSNR = " + PSNR);
 
-            psnrDatas.Add(new MeasureData() { Bitrate = bitrate, PSNR = PSNR });
-            psnrDatas.Sort((a, b) => a.Bitrate - b.Bitrate);
+            psnrDatas.Add(new MeasureData() { Timestamp = DateTime.Now.ToString(), PSNR = PSNR });
+            psnrDatas = psnrDatas
+                .OrderBy(data => data.Timestamp)
+                .ToList();
 
             File.WriteAllText(jsonPath, JsonSerializer.Serialize(psnrDatas, new JsonSerializerOptions { WriteIndented = true }));
             PrintLog(jsonPath + "に保存しました");
