@@ -41,7 +41,7 @@
                     <materialDesign:Card Margin="5,10,5,0">
                         <GroupBox Header="フレーム設定" FontSize="16" Margin="5">
                             <StackPanel Orientation="Horizontal">
-                                <Label Content="開始フレーム：元映像" Margin="5,0,0,0" FontSize="12"/>
+                                <Label Content="開始フレーム：元映像" Margin="0,0,0,0" FontSize="12"/>
                                 <xctk:IntegerUpDown x:Name="OrigStartFrame" Value="1" Maximum="9999" Minimum="1" Width="60" FontSize="12"/>
                                 <Label Content="圧縮映像" Margin="10,0,0,0" FontSize="12"/>
                                 <xctk:IntegerUpDown x:Name="CompStartFrame" Value="1" Maximum="9999" Minimum="1" Width="60" FontSize="12"/>
@@ -69,7 +69,7 @@
                                 <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
                                     <Label Content="圧縮映像" FontSize="12"></Label>
                                     <TextBox x:Name="advFolderPath" FontSize="12" HorizontalAlignment="Left" Margin="5,0,5,0" TextWrapping="NoWrap" VerticalAlignment="Top" Width="570"/>
-                                    <Button x:Name="advButtonOpenFolder" Content="参照" Width="75" FontSize="12" Click="OpenVideo"/>
+                                    <Button x:Name="advButtonOpenFolder" Content="参照" Width="75" FontSize="12" Click="OpenFolder"/>
                                 </StackPanel>
                             </StackPanel>
                         </GroupBox>
@@ -77,14 +77,14 @@
                     <materialDesign:Card Margin="5,10,5,0">
                         <GroupBox Header="フレーム設定" FontSize="16" Margin="5">
                             <StackPanel Orientation="Horizontal">
-                                <Label Content="開始フレーム：元映像" Margin="5,0,0,0" FontSize="12"/>
+                                <Label Content="開始フレーム：元映像" Margin="0,0,0,0" FontSize="12"/>
                                 <xctk:IntegerUpDown x:Name="advOrigStartFrame" Value="1" Maximum="9999" Minimum="1" Width="60" FontSize="12"/>
                                 <Label Content="計算フレーム数" Margin="50,0,0,0" FontSize="12"/>
                                 <xctk:IntegerUpDown x:Name="advCalcFrame" Value="100" Maximum="9999" Minimum="1" Width="60" FontSize="12"/>
                             </StackPanel>
                         </GroupBox>
                     </materialDesign:Card>
-                    <Button x:Name="advButtonStart" Content="スタート"  FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,5,0,5" Width="100" Click="Start_Click" RenderTransformOrigin="0.317,0.526"/>
+                    <Button x:Name="advButtonStart" Content="スタート"  FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,5,0,5" Width="100" Click="AdvStartClick" RenderTransformOrigin="0.317,0.526"/>
                     <materialDesign:Card Margin="5,0,5,0" Height="140">
                         <ListBox x:Name="advLogOutput" Margin="0,0,0,0"/>
                     </materialDesign:Card>
