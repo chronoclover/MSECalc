@@ -2,10 +2,6 @@
 
 ![GitHub](https://img.shields.io/github/license/chronoclover/PSNRCalc)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/chronoclover/PSNRCalc)
-![Nuget](https://img.shields.io/nuget/v/OpenCvSharp4?color=darkgrreen&label=OpenCvSharp4)
-![Nuget](https://img.shields.io/nuget/v/MahApps.Metro?label=MahApps.Metro)
-![Nuget](https://img.shields.io/nuget/v/Extended.Wpf.Toolkit?color=blue&label=Extended.Wpf.Toolkit)
-![Nuget](https://img.shields.io/nuget/v/MaterialDesignThemes?color=pink&label=MaterialDesignThemes)
 
 ### これはなに
 卒業研究で行うPSNR(Peak Signal to Noise Ratio)の計算をやってもらうアプリケーションです。  
